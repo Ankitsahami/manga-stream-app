@@ -13,6 +13,7 @@ export default function ChapterPage({ params }: { params: { id: string; chapter:
   const [manhwa, setManhwa] = useState<Manhwa | undefined>(undefined);
   const [chapter, setChapter] = useState<Chapter | undefined>(undefined);
   const [chapterIndex, setChapterIndex] = useState(-1);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const storedManhwa = localStorage.getItem('manhwaList');
@@ -27,10 +28,11 @@ export default function ChapterPage({ params }: { params: { id: string; chapter:
       setChapter(foundChapter);
       setChapterIndex(foundChapterIndex);
     }
+    setIsLoading(false);
   }, [params.id, params.chapter]);
 
 
-  if (manhwa === undefined || chapter === undefined) {
+  if (isLoading) {
     return null; // Let loading.tsx handle it
   }
   
@@ -58,7 +60,7 @@ export default function ChapterPage({ params }: { params: { id: string; chapter:
                   <span className="hidden md:inline">Previous</span>
                 </Link>
               </Button>
-            ) : <div className="w-[105px]"></div>}
+            ) : <div className="w-24 md:w-[105px]"></div>}
              <Button asChild variant="outline" size="icon">
                 <Link href={`/`}>
                   <Home className="h-4 w-4" />
@@ -71,19 +73,19 @@ export default function ChapterPage({ params }: { params: { id: string; chapter:
                   <ArrowRight className="h-4 w-4 md:ml-2" />
                 </Link>
               </Button>
-            ) : <div className="w-[105px]"></div>}
+            ) : <div className="w-24 md:w-[105px]"></div>}
           </div>
         </div>
       </div>
 
       <div className="flex flex-col items-center">
-        {chapter.pages.map(page => (
+        {chapter.pages.map((page, index) => (
           <div key={page.id} className="relative w-full max-w-3xl aspect-[2/3]">
             <Image
               src={page.imageUrl}
               alt={`Page ${page.id} of ${chapter.title}`}
               fill
-              priority={page.id === 1}
+              priority={index === 0}
               className="object-contain"
               data-ai-hint="manhwa page"
             />
