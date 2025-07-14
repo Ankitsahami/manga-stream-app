@@ -51,19 +51,7 @@ export default function AdminPage() {
   const { toast } = useToast();
   const [manhwaList, setManhwaList] = useState<Manhwa[]>([]);
   const [trendingManhwaIds, setTrendingManhwaIds] = useState<string[]>([]);
-
-  useEffect(() => {
-    const storedManhwa = localStorage.getItem('manhwaList');
-    const allManhwa = storedManhwa ? JSON.parse(storedManhwa) : defaultManhwaList;
-    setManhwaList(allManhwa);
-
-    const storedTrendingIds = localStorage.getItem('trendingManhwaIds');
-    if (storedTrendingIds) {
-      setTrendingManhwaIds(JSON.parse(storedTrendingIds));
-    } else {
-      setTrendingManhwaIds(allManhwa.filter(m => m.isTrending).map(m => m.id));
-    }
-  }, []);
+  const [isLoading, setIsLoading] = useState(true);
 
   const manhwaForm = useForm<ManhwaFormValues>({
     resolver: zodResolver(manhwaSchema),
@@ -78,10 +66,27 @@ export default function AdminPage() {
 
   const trendingForm = useForm<TrendingFormValues>({
     resolver: zodResolver(trendingSchema),
-    values: {
-      items: trendingManhwaIds
+    defaultValues: {
+      items: [],
     },
   });
+
+  useEffect(() => {
+    const storedManhwa = localStorage.getItem('manhwaList');
+    const allManhwa = storedManhwa ? JSON.parse(storedManhwa) : defaultManhwaList;
+    setManhwaList(allManhwa);
+
+    const storedTrendingIds = localStorage.getItem('trendingManhwaIds');
+    let initialTrendingIds: string[];
+    if (storedTrendingIds) {
+      initialTrendingIds = JSON.parse(storedTrendingIds);
+    } else {
+      initialTrendingIds = allManhwa.filter(m => m.isTrending).map(m => m.id);
+    }
+    setTrendingManhwaIds(initialTrendingIds);
+    trendingForm.reset({ items: initialTrendingIds });
+    setIsLoading(false);
+  }, [trendingForm]);
 
   const onManhwaSubmit: SubmitHandler<ManhwaFormValues> = (data) => {
     const newManhwa: Manhwa = {
@@ -102,6 +107,10 @@ export default function AdminPage() {
     localStorage.setItem('trendingManhwaIds', JSON.stringify(data.items));
     toast({ title: 'Success!', description: 'Trending list updated.' });
   };
+  
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <div className="max-w-4xl mx-auto">
