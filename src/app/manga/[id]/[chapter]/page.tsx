@@ -83,7 +83,7 @@ export default function ChapterPage({ params }: { params: { id: string; chapter:
               src={page.imageUrl}
               alt={`Page ${page.id} of ${chapter.title}`}
               fill
-              priority={page.id <= 2}
+              priority={page.id === 1}
               className="object-contain"
               data-ai-hint="manhwa page"
             />
