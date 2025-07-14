@@ -50,8 +50,8 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { manhwaList as defaultManhwaList } from '@/lib/data';
-import type { Manhwa } from '@/lib/types';
-import { Edit, Trash2 } from 'lucide-react';
+import type { Manhwa, Chapter } from '@/lib/types';
+import { Edit, Trash2, PlusCircle, BookOpen } from 'lucide-react';
 
 const manhwaSchema = z.object({
   id: z.string().optional(),
@@ -62,7 +62,13 @@ const manhwaSchema = z.object({
   genres: z.string().min(1, 'At least one genre is required'),
 });
 
+const chapterSchema = z.object({
+    title: z.string().min(1, 'Chapter title is required'),
+    pages: z.string().min(1, 'At least one page URL is required.'),
+});
+
 type ManhwaFormValues = z.infer<typeof manhwaSchema>;
+type ChapterFormValues = z.infer<typeof chapterSchema>;
 
 const trendingSchema = z.object({
   items: z.array(z.string()).refine((value) => value.some((item) => item), {
@@ -78,6 +84,8 @@ export default function AdminPage() {
   const [trendingManhwaIds, setTrendingManhwaIds] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isEditModalOpen, setEditModalOpen] = useState(false);
+  const [isChapterModalOpen, setChapterModalOpen] = useState(false);
+  const [selectedManhwa, setSelectedManhwa] = useState<Manhwa | null>(null);
   
   const manhwaForm = useForm<ManhwaFormValues>({
     resolver: zodResolver(manhwaSchema),
@@ -87,6 +95,14 @@ export default function AdminPage() {
       description: '',
       coverUrl: '',
       genres: '',
+    },
+  });
+  
+  const chapterForm = useForm<ChapterFormValues>({
+    resolver: zodResolver(chapterSchema),
+    defaultValues: {
+      title: '',
+      pages: '',
     },
   });
 
@@ -168,6 +184,47 @@ export default function AdminPage() {
     localStorage.setItem('trendingManhwaIds', JSON.stringify(data.items));
     toast({ title: 'Success!', description: 'Trending list updated.' });
   };
+  
+  const openChapterModal = (manhwa: Manhwa) => {
+    setSelectedManhwa(manhwa);
+    setChapterModalOpen(true);
+  };
+
+  const onChapterSubmit: SubmitHandler<ChapterFormValues> = (data) => {
+    if (!selectedManhwa) return;
+
+    const newChapter: Chapter = {
+      id: (selectedManhwa.chapters.length > 0 ? Math.max(...selectedManhwa.chapters.map(c => c.id)) : 0) + 1,
+      title: data.title,
+      publishedAt: new Date().toISOString(),
+      pages: data.pages.split(',').map((url, i) => ({ id: i + 1, imageUrl: url.trim() })),
+    };
+
+    const updatedList = manhwaList.map(m =>
+      m.id === selectedManhwa.id
+        ? { ...m, chapters: [...m.chapters, newChapter] }
+        : m
+    );
+    saveManhwaList(updatedList);
+    setSelectedManhwa(prev => prev ? { ...prev, chapters: [...prev.chapters, newChapter] } : null);
+    toast({ title: 'Success!', description: 'New chapter added.' });
+    chapterForm.reset();
+  };
+
+  const deleteChapter = (chapterId: number) => {
+    if (!selectedManhwa) return;
+
+    const updatedChapters = selectedManhwa.chapters.filter(c => c.id !== chapterId);
+    const updatedList = manhwaList.map(m =>
+      m.id === selectedManhwa.id
+        ? { ...m, chapters: updatedChapters }
+        : m
+    );
+    saveManhwaList(updatedList);
+    setSelectedManhwa(prev => prev ? { ...prev, chapters: updatedChapters } : null);
+    toast({ title: 'Success!', description: 'Chapter deleted.' });
+  };
+
 
   if (isLoading) {
     return <div>Loading...</div>;
@@ -188,7 +245,7 @@ export default function AdminPage() {
             <CardHeader>
               <CardTitle>Manage Existing Manhwa</CardTitle>
               <CardDescription>
-                Edit or delete series from the catalog.
+                Edit or delete series from the catalog, and manage their chapters.
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -197,6 +254,11 @@ export default function AdminPage() {
                   <Card key={manhwa.id} className="flex items-center justify-between p-4">
                     <p className="font-semibold">{manhwa.title}</p>
                     <div className="flex items-center gap-2">
+                      
+                      <Button variant="outline" size="icon" onClick={() => openChapterModal(manhwa)}>
+                        <BookOpen className="h-4 w-4" />
+                      </Button>
+
                       <Dialog open={isEditModalOpen && manhwaForm.getValues('id') === manhwa.id} onOpenChange={(open) => { if (!open) setEditModalOpen(false)}}>
                         <DialogTrigger asChild>
                            <Button variant="outline" size="icon" onClick={() => openEditModal(manhwa)}>
@@ -226,7 +288,7 @@ export default function AdminPage() {
                               )} />
                                <DialogFooter>
                                 <DialogClose asChild>
-                                  <Button type="button" variant="secondary">Cancel</Button>
+                                  <Button type="button" variant="secondary" onClick={() => setEditModalOpen(false)}>Cancel</Button>
                                 </DialogClose>
                                 <Button type="submit">Save Changes</Button>
                               </DialogFooter>
@@ -357,6 +419,98 @@ export default function AdminPage() {
           </Card>
         </TabsContent>
       </Tabs>
+      
+      {/* Chapter Management Dialog */}
+      <Dialog open={isChapterModalOpen} onOpenChange={setChapterModalOpen}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>Manage Chapters for {selectedManhwa?.title}</DialogTitle>
+            <DialogDescription>Add, view, or delete chapters for this series.</DialogDescription>
+          </DialogHeader>
+          <div className="grid grid-cols-2 gap-8">
+            <div className="space-y-4">
+              <h3 className="font-semibold text-lg">Existing Chapters</h3>
+              <div className="max-h-96 overflow-y-auto pr-4 space-y-2">
+                {selectedManhwa?.chapters && selectedManhwa.chapters.length > 0 ? (
+                  [...selectedManhwa.chapters].reverse().map(chapter => (
+                    <div key={chapter.id} className="flex items-center justify-between p-2 rounded-md bg-muted">
+                      <span>{chapter.title}</span>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive">
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              This action will permanently delete "{chapter.title}".
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction onClick={() => deleteChapter(chapter.id)}>
+                              Delete
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-sm text-muted-foreground">No chapters yet.</p>
+                )}
+              </div>
+            </div>
+            <div className="space-y-4">
+              <h3 className="font-semibold text-lg">Add New Chapter</h3>
+              <Form {...chapterForm}>
+                <form onSubmit={chapterForm.handleSubmit(onChapterSubmit)} className="space-y-4">
+                   <FormField
+                    control={chapterForm.control}
+                    name="title"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Chapter Title</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Chapter 1: The Awakening" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={chapterForm.control}
+                    name="pages"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Page Image URLs</FormLabel>
+                        <FormControl>
+                          <Textarea placeholder="https://.../page1.png, https://.../page2.png" {...field} />
+                        </FormControl>
+                        <FormDescription>
+                          Paste URLs separated by commas.
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <Button type="submit" className="w-full">
+                    <PlusCircle className="mr-2 h-4 w-4" />
+                    Add Chapter
+                  </Button>
+                </form>
+              </Form>
+            </div>
+          </div>
+          <DialogFooter>
+             <DialogClose asChild>
+                <Button type="button" variant="secondary">Close</Button>
+             </DialogClose>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
