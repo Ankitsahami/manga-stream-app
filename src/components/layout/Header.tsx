@@ -2,15 +2,15 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { BookMarked, Home, LayoutGrid, Wand2 } from 'lucide-react';
+import { BookMarked, Home, LayoutGrid, Library } from 'lucide-react';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { cn } from '@/lib/utils';
 import { SearchBar } from '@/components/SearchBar';
 
 const navLinks = [
   { href: '/', label: 'Home', icon: Home },
+  { href: '/genres', label: 'Genres', icon: Library },
   { href: '/bookmarks', label: 'Bookmarks', icon: BookMarked },
-  { href: '/recommendations', label: 'For You', icon: Wand2 },
 ];
 
 export function Header() {
