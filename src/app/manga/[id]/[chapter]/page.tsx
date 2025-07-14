@@ -7,13 +7,16 @@ import { useEffect, useState } from 'react';
 import { manhwaList as defaultManhwaList } from '@/lib/data';
 import type { Manhwa, Chapter } from '@/lib/types';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, ArrowRight, Home } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Home, Bookmark } from 'lucide-react';
+import { useBookmarks } from '@/hooks/useBookmarks';
+import { cn } from '@/lib/utils';
 
 export default function ChapterPage({ params }: { params: { id: string; chapter: string } }) {
   const [manhwa, setManhwa] = useState<Manhwa | undefined>(undefined);
   const [chapter, setChapter] = useState<Chapter | undefined>(undefined);
   const [chapterIndex, setChapterIndex] = useState(-1);
   const [isLoading, setIsLoading] = useState(true);
+  const { isBookmarked, toggleBookmark } = useBookmarks();
 
   useEffect(() => {
     const storedManhwa = localStorage.getItem('manhwaList');
@@ -65,6 +68,14 @@ export default function ChapterPage({ params }: { params: { id: string; chapter:
                 <Link href={`/`}>
                   <Home className="h-4 w-4" />
                 </Link>
+              </Button>
+             <Button 
+                variant={isBookmarked(manhwa.id) ? 'default' : 'outline'} 
+                size="icon" 
+                onClick={() => toggleBookmark(manhwa.id)}
+                aria-label={isBookmarked(manhwa.id) ? 'Remove bookmark' : 'Add bookmark'}
+             >
+                <Bookmark className={cn("h-4 w-4", isBookmarked(manhwa.id) && "fill-current")} />
               </Button>
             {nextChapter ? (
               <Button asChild variant="outline" size="sm">
