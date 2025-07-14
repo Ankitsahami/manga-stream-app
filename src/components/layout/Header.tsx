@@ -3,7 +3,7 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { BookMarked, Home, LayoutGrid, Library, LogOut, User as UserIcon } from 'lucide-react';
+import { BookMarked, Home, LayoutGrid, Library, LogOut, Menu, User as UserIcon } from 'lucide-react';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { cn } from '@/lib/utils';
 import { SearchBar } from '@/components/SearchBar';
@@ -18,6 +18,12 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+  Sheet,
+  SheetContent,
+  SheetTrigger,
+} from '@/components/ui/sheet';
+import { useState } from 'react';
 
 const navLinks = [
   { href: '/', label: 'Home', icon: Home },
@@ -29,6 +35,7 @@ export function Header() {
   const pathname = usePathname();
   const router = useRouter();
   const { user, logOut, authAvailable } = useAuth();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const handleLogout = async () => {
     try {
@@ -38,14 +45,18 @@ export function Header() {
       console.error('Failed to log out', error);
     }
   };
+  
+  const handleLinkClick = () => {
+    setIsMobileMenuOpen(false);
+  }
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 items-center">
-        <div className="mr-4 hidden md:flex">
+        <div className="mr-4 flex">
           <Link href="/" className="flex items-center gap-2 font-bold text-lg font-headline">
             <LayoutGrid className="h-6 w-6 text-accent" />
-            <span>MangaStream</span>
+            <span className="hidden sm:inline-block">MangaStream</span>
           </Link>
         </div>
         
@@ -70,7 +81,7 @@ export function Header() {
             </div>
             <ThemeToggle />
             {authAvailable && (
-                <>
+                <div className="hidden md:flex items-center">
                 {user ? (
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -104,8 +115,49 @@ export function Header() {
                     <Link href="/login">Login</Link>
                 </Button>
                 )}
-                </>
+                </div>
             )}
+             <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
+              <SheetTrigger asChild>
+                <Button variant="ghost" className="md:hidden" size="icon">
+                  <Menu className="h-5 w-5" />
+                  <span className="sr-only">Open Menu</span>
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="left" className="pr-0">
+                 <Link href="/" className="flex items-center gap-2 font-bold text-lg font-headline mb-6" onClick={handleLinkClick}>
+                    <LayoutGrid className="h-6 w-6 text-accent" />
+                    <span>MangaStream</span>
+                  </Link>
+                <div className="flex flex-col space-y-3">
+                  {navLinks.map(link => (
+                      <Link key={link.href} href={link.href} legacyBehavior>
+                        <a
+                          onClick={handleLinkClick}
+                          className={cn(
+                              'flex items-center gap-4 px-2.5',
+                              pathname === link.href ? 'text-foreground' : 'text-foreground/60'
+                          )}
+                        >
+                          <link.icon className="h-5 w-5" />
+                          {link.label}
+                        </a>
+                      </Link>
+                  ))}
+                   {authAvailable && !user && (
+                      <Link href="/login" legacyBehavior>
+                         <a
+                          onClick={handleLinkClick}
+                          className="flex items-center gap-4 px-2.5 text-foreground/60"
+                        >
+                          <UserIcon className="h-5 w-5" />
+                          Login
+                        </a>
+                      </Link>
+                   )}
+                </div>
+              </SheetContent>
+            </Sheet>
         </div>
       </div>
     </header>
