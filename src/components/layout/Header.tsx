@@ -3,7 +3,7 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { BookMarked, Home, LayoutGrid, Library, LogOut, Menu, User as UserIcon } from 'lucide-react';
+import { BookMarked, Home, LayoutGrid, Library, LogOut, Menu, User as UserIcon, Shield } from 'lucide-react';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { cn } from '@/lib/utils';
 import { SearchBar } from '@/components/SearchBar';
@@ -23,9 +23,9 @@ import {
   SheetContent,
   SheetTrigger,
 } from '@/components/ui/sheet';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 
-const navLinks = [
+const baseNavLinks = [
   { href: '/', label: 'Home', icon: Home },
   { href: '/genres', label: 'Genres', icon: Library },
   { href: '/bookmarks', label: 'Bookmarks', icon: BookMarked },
@@ -36,6 +36,16 @@ export function Header() {
   const router = useRouter();
   const { user, logOut, authAvailable } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  const isAdmin = user?.email === process.env.NEXT_PUBLIC_ADMIN_EMAIL;
+
+  const navLinks = useMemo(() => {
+    const links = [...baseNavLinks];
+    if (isAdmin) {
+      links.push({ href: '/admin', label: 'Admin', icon: Shield });
+    }
+    return links;
+  }, [isAdmin]);
 
   const handleLogout = async () => {
     try {
@@ -53,7 +63,7 @@ export function Header() {
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 items-center">
-        <div className="mr-4 flex">
+        <div className="mr-4 hidden md:flex">
           <Link href="/" className="flex items-center gap-2 font-bold text-lg font-headline">
             <LayoutGrid className="h-6 w-6 text-accent" />
             <span className="hidden sm:inline-block">MangaStream</span>
@@ -156,6 +166,26 @@ export function Header() {
                       </Link>
                    )}
                 </div>
+                 {user && (
+                  <div className="absolute bottom-4 left-4 right-4">
+                     <Separator className="my-4" />
+                     <div className="flex items-center gap-3">
+                        <Avatar className="h-9 w-9">
+                          <AvatarImage src={user.photoURL || ''} alt={user.displayName || 'User'} />
+                          <AvatarFallback>
+                              <UserIcon />
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="flex flex-col text-sm truncate">
+                          <span className="font-medium">{user.displayName}</span>
+                          <span className="text-muted-foreground truncate">{user.email}</span>
+                        </div>
+                        <Button variant="ghost" size="icon" className="ml-auto" onClick={handleLogout}>
+                          <LogOut className="h-5 w-5" />
+                        </Button>
+                     </div>
+                  </div>
+                 )}
               </SheetContent>
             </Sheet>
         </div>
