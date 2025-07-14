@@ -6,7 +6,7 @@ import Image from 'next/image';
 import { formatDistanceToNow } from 'date-fns';
 import { Input } from '@/components/ui/input';
 import { MangaCard } from '@/components/MangaCard';
-import { manhwaList } from '@/lib/data';
+import { manhwaList as defaultManhwaList } from '@/lib/data';
 import type { Manhwa, Chapter } from '@/lib/types';
 import { Search } from 'lucide-react';
 import {
@@ -26,23 +26,28 @@ interface ChapterUpdate {
 export default function Home() {
   const [searchQuery, setSearchQuery] = useState('');
   const [localManhwaList, setLocalManhwaList] = useState<Manhwa[]>([]);
-  const [trendingManhwa, setTrendingManhwa] = useState<Manhwa[]>([]);
-  const [recentlyUpdated, setRecentlyUpdated] = useState<Manhwa[]>([]);
+  const [trendingManhwaIds, setTrendingManhwaIds] = useState<string[]>([]);
   const [newChapters, setNewChapters] = useState<ChapterUpdate[]>([]);
-
-
+  
   useEffect(() => {
-    // In a real app, you'd fetch this data. Here we use localStorage to persist admin changes.
     const storedManhwa = localStorage.getItem('manhwaList');
-    const allManhwa: Manhwa[] = storedManhwa ? JSON.parse(storedManhwa) : manhwaList;
+    const allManhwa: Manhwa[] = storedManhwa ? JSON.parse(storedManhwa) : defaultManhwaList;
     setLocalManhwaList(allManhwa);
 
     const storedTrending = localStorage.getItem('trendingManhwaIds');
-    const trendingIds = storedTrending ? JSON.parse(storedTrending) : allManhwa.filter((m: Manhwa) => m.isTrending).map((m: Manhwa) => m.id);
-    setTrendingManhwa(allManhwa.filter((m: Manhwa) => trendingIds.includes(m.id)));
+    if (storedTrending) {
+      setTrendingManhwaIds(JSON.parse(storedTrending));
+    } else {
+      setTrendingManhwaIds(allManhwa.filter((m) => m.isTrending).map((m) => m.id));
+    }
+  }, []);
 
-    // Simulate recently updated and new chapters
-    const updated = [...allManhwa]
+  const trendingManhwa = useMemo(() => {
+    return localManhwaList.filter((m) => trendingManhwaIds.includes(m.id));
+  }, [localManhwaList, trendingManhwaIds]);
+
+  const recentlyUpdated = useMemo(() => {
+    return [...localManhwaList]
       .filter(m => m.chapters.length > 0)
       .sort((a, b) => {
         const lastChapterA = new Date(a.chapters[a.chapters.length - 1].publishedAt);
@@ -50,15 +55,15 @@ export default function Home() {
         return lastChapterB.getTime() - lastChapterA.getTime();
       })
       .slice(0, 5);
-    setRecentlyUpdated(updated);
+  }, [localManhwaList]);
 
-    const chapters: ChapterUpdate[] = allManhwa
+  useEffect(() => {
+    const chapters: ChapterUpdate[] = localManhwaList
       .flatMap((m: Manhwa) => m.chapters.map(c => ({ manhwa: m, chapter: c })))
       .sort((a, b) => new Date(b.chapter.publishedAt).getTime() - new Date(a.chapter.publishedAt).getTime())
       .slice(0, 12);
     setNewChapters(chapters);
-
-  }, []);
+  }, [localManhwaList]);
 
   const filteredManhwa = useMemo(() => {
     if (!searchQuery) {
