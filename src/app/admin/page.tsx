@@ -25,7 +25,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
 import { manhwaList as defaultManhwaList } from '@/lib/data';
 import type { Manhwa } from '@/lib/types';
 
@@ -50,31 +50,38 @@ type TrendingFormValues = z.infer<typeof trendingSchema>;
 export default function AdminPage() {
   const { toast } = useToast();
   const [manhwaList, setManhwaList] = useState<Manhwa[]>([]);
+  const [trendingManhwaIds, setTrendingManhwaIds] = useState<string[]>([]);
 
   useEffect(() => {
     const storedManhwa = localStorage.getItem('manhwaList');
-    setManhwaList(storedManhwa ? JSON.parse(storedManhwa) : defaultManhwaList);
+    const allManhwa = storedManhwa ? JSON.parse(storedManhwa) : defaultManhwaList;
+    setManhwaList(allManhwa);
+
+    const storedTrendingIds = localStorage.getItem('trendingManhwaIds');
+    if (storedTrendingIds) {
+      setTrendingManhwaIds(JSON.parse(storedTrendingIds));
+    } else {
+      setTrendingManhwaIds(allManhwa.filter(m => m.isTrending).map(m => m.id));
+    }
   }, []);
 
   const manhwaForm = useForm<ManhwaFormValues>({
     resolver: zodResolver(manhwaSchema),
+    defaultValues: {
+      title: '',
+      author: '',
+      description: '',
+      coverUrl: '',
+      genres: '',
+    }
   });
 
   const trendingForm = useForm<TrendingFormValues>({
     resolver: zodResolver(trendingSchema),
-    defaultValues: {
-      items: manhwaList.filter(m => {
-        const trendingIds = JSON.parse(localStorage.getItem('trendingManhwaIds') || '[]');
-        return trendingIds.includes(m.id) || m.isTrending
-      }).map(m => m.id),
+    values: {
+      items: trendingManhwaIds
     },
   });
-
-  useEffect(() => {
-    const trendingIds = JSON.parse(localStorage.getItem('trendingManhwaIds') || '[]');
-    const currentTrending = manhwaList.filter(m => trendingIds.length > 0 ? trendingIds.includes(m.id) : m.isTrending).map(m => m.id);
-    trendingForm.reset({ items: currentTrending });
-  }, [manhwaList, trendingForm]);
 
   const onManhwaSubmit: SubmitHandler<ManhwaFormValues> = (data) => {
     const newManhwa: Manhwa = {
@@ -87,10 +94,11 @@ export default function AdminPage() {
     setManhwaList(updatedList);
     localStorage.setItem('manhwaList', JSON.stringify(updatedList));
     toast({ title: 'Success!', description: 'New manhwa added.' });
-    manhwaForm.reset({ title: '', author: '', description: '', coverUrl: '', genres: ''});
+    manhwaForm.reset();
   };
 
   const onTrendingSubmit: SubmitHandler<TrendingFormValues> = (data) => {
+    setTrendingManhwaIds(data.items);
     localStorage.setItem('trendingManhwaIds', JSON.stringify(data.items));
     toast({ title: 'Success!', description: 'Trending list updated.' });
   };
