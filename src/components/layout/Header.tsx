@@ -48,24 +48,23 @@ export function Header() {
             <span>MangaStream</span>
           </Link>
         </div>
-        <div className="flex-1 flex items-center gap-6">
-            <nav className="hidden md:flex items-center gap-6 text-sm font-medium">
-            {navLinks.map(link => (
-                <Link
-                key={link.href}
-                href={link.href}
-                className={cn(
-                    'transition-colors hover:text-foreground/80',
-                    pathname === link.href ? 'text-foreground' : 'text-foreground/60'
-                )}
-                >
-                {link.label}
-                </Link>
-            ))}
-            </nav>
-        </div>
-
-        <div className="flex items-center justify-end space-x-2">
+        
+        <nav className="hidden md:flex items-center gap-6 text-sm font-medium">
+        {navLinks.map(link => (
+            <Link
+            key={link.href}
+            href={link.href}
+            className={cn(
+                'transition-colors hover:text-foreground/80',
+                pathname === link.href ? 'text-foreground' : 'text-foreground/60'
+            )}
+            >
+            {link.label}
+            </Link>
+        ))}
+        </nav>
+        
+        <div className="flex flex-1 items-center justify-end space-x-2">
             <div className="w-full flex-1 md:w-auto md:flex-none">
                 <SearchBar />
             </div>
