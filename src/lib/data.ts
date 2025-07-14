@@ -1,5 +1,11 @@
 import type { Manhwa } from './types';
 
+function getPastDate(days: number): string {
+  const date = new Date();
+  date.setDate(date.getDate() - days);
+  return date.toISOString();
+}
+
 export const manhwaList: Manhwa[] = [
   {
     id: 'solo-leveling',
@@ -10,9 +16,9 @@ export const manhwaList: Manhwa[] = [
     genres: ['Action', 'Fantasy', 'Adventure'],
     isTrending: true,
     chapters: [
-      { id: 1, title: 'Chapter 1', pages: Array.from({ length: 15 }, (_, i) => ({ id: i + 1, imageUrl: `https://placehold.co/800x1200.png` })) },
-      { id: 2, title: 'Chapter 2', pages: Array.from({ length: 18 }, (_, i) => ({ id: i + 1, imageUrl: `https://placehold.co/800x1200.png` })) },
-      { id: 3, title: 'Chapter 3', pages: Array.from({ length: 16 }, (_, i) => ({ id: i + 1, imageUrl: `https://placehold.co/800x1200.png` })) },
+      { id: 1, title: 'Chapter 1', publishedAt: getPastDate(5), pages: Array.from({ length: 15 }, (_, i) => ({ id: i + 1, imageUrl: `https://placehold.co/800x1200.png` })) },
+      { id: 2, title: 'Chapter 2', publishedAt: getPastDate(3), pages: Array.from({ length: 18 }, (_, i) => ({ id: i + 1, imageUrl: `https://placehold.co/800x1200.png` })) },
+      { id: 3, title: 'Chapter 3', publishedAt: getPastDate(1), pages: Array.from({ length: 16 }, (_, i) => ({ id: i + 1, imageUrl: `https://placehold.co/800x1200.png` })) },
     ],
   },
   {
@@ -24,8 +30,10 @@ export const manhwaList: Manhwa[] = [
     genres: ['Action', 'Fantasy', 'Mystery'],
     isTrending: true,
     chapters: [
-      { id: 1, title: 'S1 - Chapter 1', pages: Array.from({ length: 20 }, (_, i) => ({ id: i + 1, imageUrl: `https://placehold.co/800x1200.png` })) },
-      { id: 2, title: 'S1 - Chapter 2', pages: Array.from({ length: 22 }, (_, i) => ({ id: i + 1, imageUrl: `https://placehold.co/800x1200.png` })) },
+      { id: 1, title: 'S1 - Chapter 1', publishedAt: getPastDate(10), pages: Array.from({ length: 20 }, (_, i) => ({ id: i + 1, imageUrl: `https://placehold.co/800x1200.png` })) },
+      { id: 2, title: 'S1 - Chapter 2', publishedAt: getPastDate(4), pages: Array.from({ length: 22 }, (_, i) => ({ id: i + 1, imageUrl: `https://placehold.co/800x1200.png` })) },
+      { id: 3, title: 'S1 - Chapter 3', publishedAt: getPastDate(2), pages: Array.from({ length: 22 }, (_, i) => ({ id: i + 1, imageUrl: `https://placehold.co/800x1200.png` })) },
+      { id: 4, title: 'S1 - Chapter 4', publishedAt: getPastDate(0), pages: Array.from({ length: 22 }, (_, i) => ({ id: i + 1, imageUrl: `https://placehold.co/800x1200.png` })) },
     ],
   },
   {
@@ -37,7 +45,8 @@ export const manhwaList: Manhwa[] = [
     genres: ['Action', 'Fantasy', 'Isekai'],
     isTrending: false,
     chapters: [
-       { id: 1, title: 'Chapter 1', pages: Array.from({ length: 25 }, (_, i) => ({ id: i + 1, imageUrl: `https://placehold.co/800x1200.png` })) },
+       { id: 1, title: 'Chapter 1', publishedAt: getPastDate(12), pages: Array.from({ length: 25 }, (_, i) => ({ id: i + 1, imageUrl: `https://placehold.co/800x1200.png` })) },
+       { id: 2, title: 'Chapter 2', publishedAt: getPastDate(6), pages: Array.from({ length: 25 }, (_, i) => ({ id: i + 1, imageUrl: `https://placehold.co/800x1200.png` })) },
     ],
   },
   {
@@ -49,8 +58,8 @@ export const manhwaList: Manhwa[] = [
     genres: ['Action', 'Fantasy', 'Apocalyptic'],
     isTrending: true,
     chapters: [
-      { id: 1, title: 'Chapter 1', pages: Array.from({ length: 30 }, (_, i) => ({ id: i + 1, imageUrl: `https://placehold.co/800x1200.png` })) },
-      { id: 2, title: 'Chapter 2', pages: Array.from({ length: 28 }, (_, i) => ({ id: i + 1, imageUrl: `https://placehold.co/800x1200.png` })) },
+      { id: 1, title: 'Chapter 1', publishedAt: getPastDate(3), pages: Array.from({ length: 30 }, (_, i) => ({ id: i + 1, imageUrl: `https://placehold.co/800x1200.png` })) },
+      { id: 2, title: 'Chapter 2', publishedAt: getPastDate(1), pages: Array.from({ length: 28 }, (_, i) => ({ id: i + 1, imageUrl: `https://placehold.co/800x1200.png` })) },
     ],
   },
   {
@@ -62,7 +71,9 @@ export const manhwaList: Manhwa[] = [
     genres: ['Horror', 'Thriller', 'Apocalyptic'],
     isTrending: false,
     chapters: [
-      { id: 1, title: 'Chapter 1', pages: Array.from({ length: 15 }, (_, i) => ({ id: i + 1, imageUrl: `https://placehold.co/800x1200.png` })) },
+      { id: 1, title: 'Chapter 1', publishedAt: getPastDate(8), pages: Array.from({ length: 15 }, (_, i) => ({ id: i + 1, imageUrl: `https://placehold.co/800x1200.png` })) },
+      { id: 2, title: 'Chapter 2', publishedAt: getPastDate(4), pages: Array.from({ length: 15 }, (_, i) => ({ id: i + 1, imageUrl: `https://placehold.co/800x1200.png` })) },
+      { id: 3, title: 'Chapter 3', publishedAt: getPastDate(2), pages: Array.from({ length: 15 }, (_, i) => ({ id: i + 1, imageUrl: `https://placehold.co/800x1200.png` })) },
     ],
   },
   {
@@ -74,7 +85,9 @@ export const manhwaList: Manhwa[] = [
     genres: ['Action', 'Supernatural', 'Comedy'],
     isTrending: false,
     chapters: [
-      { id: 1, title: 'Chapter 1', pages: Array.from({ length: 12 }, (_, i) => ({ id: i + 1, imageUrl: `https://placehold.co/800x1200.png` })) },
+      { id: 1, title: 'Chapter 1', publishedAt: getPastDate(14), pages: Array.from({ length: 12 }, (_, i) => ({ id: i + 1, imageUrl: `https://placehold.co/800x1200.png` })) },
+      { id: 2, title: 'Chapter 2', publishedAt: getPastDate(7), pages: Array.from({ length: 12 }, (_, i) => ({ id: i + 1, imageUrl: `https://placehold.co/800x1200.png` })) },
+      { id: 3, title: 'Chapter 3', publishedAt: getPastDate(0), pages: Array.from({ length: 12 }, (_, i) => ({ id: i + 1, imageUrl: `https://placehold.co/800x1200.png` })) },
     ],
   },
 ];
