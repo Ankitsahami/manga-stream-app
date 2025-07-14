@@ -9,7 +9,7 @@ import {
   signOut,
   User,
 } from 'firebase/auth';
-import { auth } from '@/lib/firebase';
+import { auth, firebaseEnabled } from '@/lib/firebase';
 import Loading from '@/app/loading';
 
 interface AuthContextType {
@@ -17,6 +17,7 @@ interface AuthContextType {
   loading: boolean;
   googleSignIn: () => Promise<void>;
   logOut: () => Promise<void>;
+  authAvailable: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -26,6 +27,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
 
   const googleSignIn = async () => {
+    if (!auth) throw new Error("Firebase not configured");
     const provider = new GoogleAuthProvider();
     try {
       await signInWithPopup(auth, provider);
@@ -36,6 +38,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const logOut = async () => {
+    if (!auth) throw new Error("Firebase not configured");
     try {
       await signOut(auth);
     } catch (error) {
@@ -45,6 +48,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   useEffect(() => {
+    if (!auth) {
+      setLoading(false);
+      return;
+    }
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
       setLoading(false);
@@ -57,7 +64,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, googleSignIn, logOut }}>
+    <AuthContext.Provider value={{ user, loading, googleSignIn, logOut, authAvailable: firebaseEnabled }}>
       {children}
     </AuthContext.Provider>
   );

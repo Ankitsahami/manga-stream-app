@@ -9,7 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { FcGoogle } from 'react-icons/fc';
 
 export default function LoginPage() {
-  const { user, googleSignIn } = useAuth();
+  const { user, googleSignIn, authAvailable } = useAuth();
   const router = useRouter();
 
   const handleSignIn = async () => {
@@ -25,6 +25,21 @@ export default function LoginPage() {
       router.push('/');
     }
   }, [user, router]);
+
+  if (!authAvailable) {
+    return (
+       <div className="flex items-center justify-center min-h-[60vh]">
+        <Card className="w-full max-w-md">
+          <CardHeader className="text-center">
+            <CardTitle className="text-2xl font-headline">Login Not Configured</CardTitle>
+            <CardDescription>
+              The application developer has not configured Firebase authentication. Please add your credentials to the .env file.
+            </CardDescription>
+          </CardHeader>
+        </Card>
+      </div>
+    )
+  }
 
   return (
     <div className="flex items-center justify-center min-h-[60vh]">
