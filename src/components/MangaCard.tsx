@@ -38,7 +38,7 @@ export function MangaCard({ manhwa, chapter, size = 'default' }: MangaCardProps)
             <h3 className={cn("font-headline font-semibold truncate group-hover:text-accent", isLarge ? 'text-lg' : 'text-xs')}>
               {manhwa.title}
             </h3>
-             {!isLarge && (
+             {!isLarge && manhwa.genres && manhwa.genres.length > 0 && (
               <div className="flex flex-wrap gap-1 mt-1">
                 {manhwa.genres.slice(0, 1).map(genre => (
                   <Badge key={genre} variant="secondary" className="text-[10px] px-1.5 py-0">{genre}</Badge>
