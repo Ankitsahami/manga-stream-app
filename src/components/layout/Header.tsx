@@ -11,7 +11,6 @@ const navLinks = [
   { href: '/', label: 'Home', icon: Home },
   { href: '/bookmarks', label: 'Bookmarks', icon: BookMarked },
   { href: '/recommendations', label: 'For You', icon: Wand2 },
-  { href: '/admin', label: 'Admin', icon: Shield },
 ];
 
 export function Header() {
