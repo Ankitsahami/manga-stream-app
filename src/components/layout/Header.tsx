@@ -2,10 +2,10 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { BookMarked, Home, LayoutGrid, Shield, Wand2 } from 'lucide-react';
+import { BookMarked, Home, LayoutGrid, Wand2 } from 'lucide-react';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
+import { SearchBar } from '@/components/SearchBar';
 
 const navLinks = [
   { href: '/', label: 'Home', icon: Home },
@@ -25,7 +25,7 @@ export function Header() {
             <span>MangaStream</span>
           </Link>
         </div>
-        <nav className="flex items-center gap-6 text-sm font-medium">
+        <nav className="hidden md:flex items-center gap-6 text-sm font-medium">
           {navLinks.map(link => (
             <Link
               key={link.href}
@@ -40,6 +40,9 @@ export function Header() {
           ))}
         </nav>
         <div className="flex flex-1 items-center justify-end space-x-2">
+          <div className="w-full flex-1 md:w-auto md:flex-none">
+            <SearchBar />
+          </div>
           <ThemeToggle />
         </div>
       </div>

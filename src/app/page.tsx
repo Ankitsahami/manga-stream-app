@@ -4,11 +4,9 @@ import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { formatDistanceToNow } from 'date-fns';
-import { Input } from '@/components/ui/input';
 import { MangaCard } from '@/components/MangaCard';
 import { manhwaList as defaultManhwaList } from '@/lib/data';
 import type { Manhwa, Chapter } from '@/lib/types';
-import { Search } from 'lucide-react';
 import {
   Carousel,
   CarouselContent,
@@ -24,10 +22,8 @@ interface ChapterUpdate {
 }
 
 export default function Home() {
-  const [searchQuery, setSearchQuery] = useState('');
   const [localManhwaList, setLocalManhwaList] = useState<Manhwa[]>([]);
   const [trendingManhwaIds, setTrendingManhwaIds] = useState<string[]>([]);
-  const [newChapters, setNewChapters] = useState<ChapterUpdate[]>([]);
   
   useEffect(() => {
     const storedManhwa = localStorage.getItem('manhwaList');
@@ -57,23 +53,13 @@ export default function Home() {
       .slice(0, 5);
   }, [localManhwaList]);
 
-  useEffect(() => {
+  const newChapters = useMemo(() => {
     const chapters: ChapterUpdate[] = localManhwaList
       .flatMap((m: Manhwa) => m.chapters.map(c => ({ manhwa: m, chapter: c })))
       .sort((a, b) => new Date(b.chapter.publishedAt).getTime() - new Date(a.chapter.publishedAt).getTime())
       .slice(0, 12);
-    setNewChapters(chapters);
+    return chapters;
   }, [localManhwaList]);
-
-  const filteredManhwa = useMemo(() => {
-    if (!searchQuery) {
-      return localManhwaList;
-    }
-    return localManhwaList.filter(manhwa =>
-      manhwa.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      manhwa.genres.some(genre => genre.toLowerCase().includes(searchQuery.toLowerCase()))
-    );
-  }, [searchQuery, localManhwaList]);
   
   const getLatestChapters = (manhwa: Manhwa, count: number) => {
     return [...manhwa.chapters]
@@ -156,27 +142,16 @@ export default function Home() {
       <section>
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-headline font-bold">Browse All</h1>
-          <div className="relative w-full max-w-sm">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-            <Input
-              type="search"
-              placeholder="Search by title or genre..."
-              className="pl-10"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </div>
         </div>
-        {filteredManhwa.length > 0 ? (
+        {localManhwaList.length > 0 ? (
           <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-4">
-            {filteredManhwa.map(manhwa => (
+            {localManhwaList.map(manhwa => (
               <MangaCard key={manhwa.id} manhwa={manhwa} />
             ))}
           </div>
         ) : (
           <div className="text-center py-16 text-muted-foreground">
-            <p className="text-xl">No results found.</p>
-            <p>Try a different search term.</p>
+            <p className="text-xl">Loading manhwa...</p>
           </div>
         )}
       </section>
