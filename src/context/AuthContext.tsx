@@ -8,6 +8,9 @@ import {
   signInWithPopup,
   signOut,
   User,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  updateProfile,
 } from 'firebase/auth';
 import { auth, firebaseEnabled } from '@/lib/firebase';
 import Loading from '@/app/loading';
@@ -16,6 +19,8 @@ interface AuthContextType {
   user: User | null;
   loading: boolean;
   googleSignIn: () => Promise<void>;
+  emailSignIn: (email: string, pass: string) => Promise<void>;
+  emailSignUp: (email: string, pass: string, name: string) => Promise<void>;
   logOut: () => Promise<void>;
   authAvailable: boolean;
 }
@@ -36,6 +41,31 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       throw error;
     }
   };
+
+  const emailSignIn = async (email: string, pass: string) => {
+    if (!auth) throw new Error("Firebase not configured");
+    try {
+      await signInWithEmailAndPassword(auth, email, pass);
+    } catch (error) {
+       console.error(error);
+       throw error;
+    }
+  }
+
+  const emailSignUp = async (email: string, pass: string, name: string) => {
+     if (!auth) throw new Error("Firebase not configured");
+     try {
+       const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
+       await updateProfile(userCredential.user, {
+         displayName: name,
+       });
+       // To ensure the user object is updated with the display name
+       setUser({ ...userCredential.user, displayName: name });
+     } catch (error) {
+       console.error(error);
+       throw error;
+     }
+  }
 
   const logOut = async () => {
     if (!auth) throw new Error("Firebase not configured");
@@ -64,7 +94,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, googleSignIn, logOut, authAvailable: firebaseEnabled }}>
+    <AuthContext.Provider value={{ user, loading, googleSignIn, emailSignIn, emailSignUp, logOut, authAvailable: firebaseEnabled }}>
       {children}
     </AuthContext.Provider>
   );
