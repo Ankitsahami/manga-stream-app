@@ -145,28 +145,27 @@ export function Header({ adminEmail }: { adminEmail?: string }) {
                   </Link>
                 <div className="flex flex-col space-y-3">
                   {navLinks.map(link => (
-                      <Link key={link.href} href={link.href} legacyBehavior>
-                        <a
-                          onClick={handleLinkClick}
-                          className={cn(
-                              'flex items-center gap-4 px-2.5',
-                              pathname === link.href ? 'text-foreground' : 'text-foreground/60'
-                          )}
-                        >
-                          <link.icon className="h-5 w-5" />
-                          {link.label}
-                        </a>
+                      <Link
+                        key={link.href}
+                        href={link.href}
+                        onClick={handleLinkClick}
+                        className={cn(
+                            'flex items-center gap-4 px-2.5',
+                            pathname === link.href ? 'text-foreground' : 'text-foreground/60'
+                        )}
+                      >
+                        <link.icon className="h-5 w-5" />
+                        {link.label}
                       </Link>
                   ))}
                    {authAvailable && !user && (
-                      <Link href="/login" legacyBehavior>
-                         <a
-                          onClick={handleLinkClick}
-                          className="flex items-center gap-4 px-2.5 text-foreground/60"
-                        >
-                          <UserIcon className="h-5 w-5" />
-                          Login
-                        </a>
+                      <Link
+                        href="/login"
+                        onClick={handleLinkClick}
+                        className="flex items-center gap-4 px-2.5 text-foreground/60"
+                      >
+                        <UserIcon className="h-5 w-5" />
+                        Login
                       </Link>
                    )}
                 </div>

@@ -1,3 +1,4 @@
+
 'use client';
 
 import Image from 'next/image';
@@ -71,10 +72,12 @@ export default function ManhwaPage({ params }: { params: { id: string } }) {
             <div className="space-y-2">
               {manhwa.chapters.length > 0 ? (
                 [...manhwa.chapters].reverse().map(chapter => (
-                  <Link key={chapter.id} href={`/manga/${manhwa.id}/${chapter.id}`} legacyBehavior>
-                    <a className="block p-4 rounded-md transition-colors hover:bg-muted">
-                      <p className="font-medium">{chapter.title}</p>
-                    </a>
+                  <Link
+                    key={chapter.id}
+                    href={`/manga/${manhwa.id}/${chapter.id}`}
+                    className="block p-4 rounded-md transition-colors hover:bg-muted"
+                  >
+                    <p className="font-medium">{chapter.title}</p>
                   </Link>
                 ))
               ) : (
