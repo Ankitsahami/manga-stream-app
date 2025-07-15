@@ -13,13 +13,12 @@ import { useBookmarks } from '@/hooks/useBookmarks';
 import { cn } from '@/lib/utils';
 import Loading from '../../../loading';
 
-function ChapterReader({ params }: { params: { id: string; chapter: string } }) {
+function ChapterReader({ id, chapterIdParam }: { id: string; chapterIdParam: string }) {
   const [manhwa, setManhwa] = useState<Manhwa | undefined>(undefined);
   const [chapter, setChapter] = useState<Chapter | undefined>(undefined);
   const [chapterIndex, setChapterIndex] = useState(-1);
   const { isBookmarked, toggleBookmark } = useBookmarks();
-  const { id, chapter: chapterIdParam } = params;
-
+  
   useEffect(() => {
     const storedManhwa = localStorage.getItem('manhwaList');
     const allManhwa = storedManhwa ? JSON.parse(storedManhwa) : defaultManhwaList;
@@ -36,8 +35,6 @@ function ChapterReader({ params }: { params: { id: string; chapter: string } }) 
   }, [id, chapterIdParam]);
 
   if (!manhwa || !chapter) {
-    // Let suspense handle loading, and if it's not found after effect, it will 404.
-    // This check is still useful if the effect sets them to null/undefined.
     if(manhwa === null || chapter === null) notFound();
     return null; 
   }
@@ -126,9 +123,10 @@ function ChapterReader({ params }: { params: { id: string; chapter: string } }) 
 }
 
 export default function ChapterPage({ params }: { params: { id: string; chapter: string } }) {
+  const { id, chapter } = params;
   return (
     <Suspense fallback={<Loading />}>
-      <ChapterReader params={params} />
+      <ChapterReader id={id} chapterIdParam={chapter} />
     </Suspense>
   )
 }
