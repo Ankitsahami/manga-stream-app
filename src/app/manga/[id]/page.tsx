@@ -4,7 +4,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, use, Suspense } from 'react';
 import { manhwaList as defaultManhwaList } from '@/lib/data';
 import type { Manhwa } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
@@ -13,22 +13,24 @@ import { Separator } from '@/components/ui/separator';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Bookmark } from 'lucide-react';
 import { useBookmarks } from '@/hooks/useBookmarks';
+import Loading from '../../loading';
 
-export default function ManhwaPage({ params }: { params: { id: string } }) {
+function ManhwaDetails({ params }: { params: { id: string } }) {
   const [manhwa, setManhwa] = useState<Manhwa | undefined>(undefined);
   const { isBookmarked, toggleBookmark } = useBookmarks();
+  const { id } = params;
 
   useEffect(() => {
     const storedManhwa = localStorage.getItem('manhwaList');
     const allManhwa = storedManhwa ? JSON.parse(storedManhwa) : defaultManhwaList;
-    const foundManhwa = allManhwa.find((m: Manhwa) => m.id === params.id);
+    const foundManhwa = allManhwa.find((m: Manhwa) => m.id === id);
     setManhwa(foundManhwa);
-  }, [params.id]);
+  }, [id]);
 
   if (!manhwa) {
     // This will be caught by loading.tsx initially, then notFound if it's still null after effect.
     // To prevent flashing notFound, we can show a skeleton loader here.
-    return null; 
+    return <Loading />; 
   }
 
   return (
@@ -88,5 +90,13 @@ export default function ManhwaPage({ params }: { params: { id: string } }) {
         </Card>
       </div>
     </div>
+  );
+}
+
+export default function ManhwaPage({ params }: { params: { id: string } }) {
+  return (
+    <Suspense fallback={<Loading />}>
+      <ManhwaDetails params={params} />
+    </Suspense>
   );
 }

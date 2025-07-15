@@ -1,3 +1,4 @@
+
 'use client';
 
 import { usePathname } from 'next/navigation';
@@ -8,8 +9,8 @@ import type { Manhwa } from '@/lib/types';
 import Loading from '../../loading';
 
 function GenreResults() {
-    const pathname = usePathname()
-    const genre = decodeURIComponent(pathname.split('/').pop() || '');
+    const pathname = usePathname();
+    const genre = useMemo(() => decodeURIComponent(pathname.split('/').pop() || ''), [pathname]);
     const [localManhwaList, setLocalManhwaList] = useState<Manhwa[]>([]);
 
     useEffect(() => {
@@ -26,6 +27,10 @@ function GenreResults() {
             manhwa.genres.some(g => g.toLowerCase() === genre.toLowerCase())
         );
     }, [genre, localManhwaList]);
+
+    if (!genre) {
+        return <Loading />
+    }
 
     return (
         <div>

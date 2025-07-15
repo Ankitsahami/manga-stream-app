@@ -1,21 +1,22 @@
+
 'use client';
 
 import Image from 'next/image';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { manhwaList as defaultManhwaList } from '@/lib/data';
 import type { Manhwa, Chapter } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, ArrowRight, Home, Bookmark } from 'lucide-react';
 import { useBookmarks } from '@/hooks/useBookmarks';
 import { cn } from '@/lib/utils';
+import Loading from '../../../loading';
 
-export default function ChapterPage({ params }: { params: { id: string; chapter: string } }) {
+function ChapterReader({ params }: { params: { id: string; chapter: string } }) {
   const [manhwa, setManhwa] = useState<Manhwa | undefined>(undefined);
   const [chapter, setChapter] = useState<Chapter | undefined>(undefined);
   const [chapterIndex, setChapterIndex] = useState(-1);
-  const [isLoading, setIsLoading] = useState(true);
   const { isBookmarked, toggleBookmark } = useBookmarks();
 
   useEffect(() => {
@@ -31,16 +32,13 @@ export default function ChapterPage({ params }: { params: { id: string; chapter:
       setChapter(foundChapter);
       setChapterIndex(foundChapterIndex);
     }
-    setIsLoading(false);
   }, [params.id, params.chapter]);
 
-
-  if (isLoading) {
-    return null; // Let loading.tsx handle it
-  }
-  
   if (!manhwa || !chapter) {
-    notFound();
+    // Let suspense handle loading, and if it's not found after effect, it will 404.
+    // This check is still useful if the effect sets them to null/undefined.
+    if(manhwa === null || chapter === null) notFound();
+    return null; 
   }
 
   const prevChapter = chapterIndex > 0 ? manhwa.chapters[chapterIndex - 1] : null;
@@ -124,4 +122,12 @@ export default function ChapterPage({ params }: { params: { id: string; chapter:
       </div>
     </div>
   );
+}
+
+export default function ChapterPage({ params }: { params: { id: string; chapter: string } }) {
+  return (
+    <Suspense fallback={<Loading />}>
+      <ChapterReader params={params} />
+    </Suspense>
+  )
 }
