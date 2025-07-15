@@ -25,6 +25,7 @@ import {
   SheetTrigger,
 } from '@/components/ui/sheet';
 import { useState, useMemo } from 'react';
+import { Separator } from '@/components/ui/separator';
 
 const baseNavLinks = [
   { href: '/', label: 'Home', icon: Home },
