@@ -17,7 +17,10 @@ let auth: Auth | null = null;
 const firebaseEnabled =
   firebaseConfig.apiKey &&
   firebaseConfig.authDomain &&
-  firebaseConfig.projectId;
+  firebaseConfig.projectId &&
+  firebaseConfig.storageBucket &&
+  firebaseConfig.messagingSenderId &&
+  firebaseConfig.appId;
 
 if (firebaseEnabled) {
   app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
