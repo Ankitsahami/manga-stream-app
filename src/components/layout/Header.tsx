@@ -21,6 +21,7 @@ import {
 import {
   Sheet,
   SheetContent,
+  SheetTitle,
   SheetTrigger,
 } from '@/components/ui/sheet';
 import { useState, useMemo } from 'react';
@@ -137,6 +138,7 @@ export function Header({ adminEmail }: { adminEmail?: string }) {
                 </Button>
               </SheetTrigger>
               <SheetContent side="left" className="pr-0">
+                 <SheetTitle className="sr-only">Mobile Menu</SheetTitle>
                  <Link href="/" className="flex items-center gap-2 font-bold text-lg font-headline mb-6" onClick={handleLinkClick}>
                     <LayoutGrid className="h-6 w-6 text-accent" />
                     <span>MangaStream</span>
