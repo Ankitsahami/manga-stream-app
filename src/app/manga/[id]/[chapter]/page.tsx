@@ -18,21 +18,22 @@ function ChapterReader({ params }: { params: { id: string; chapter: string } }) 
   const [chapter, setChapter] = useState<Chapter | undefined>(undefined);
   const [chapterIndex, setChapterIndex] = useState(-1);
   const { isBookmarked, toggleBookmark } = useBookmarks();
+  const { id, chapter: chapterIdParam } = params;
 
   useEffect(() => {
     const storedManhwa = localStorage.getItem('manhwaList');
     const allManhwa = storedManhwa ? JSON.parse(storedManhwa) : defaultManhwaList;
-    const foundManhwa = allManhwa.find((m: Manhwa) => m.id === params.id);
+    const foundManhwa = allManhwa.find((m: Manhwa) => m.id === id);
     
     if (foundManhwa) {
       setManhwa(foundManhwa);
-      const chapterId = parseInt(params.chapter, 10);
+      const chapterId = parseInt(chapterIdParam, 10);
       const foundChapter = foundManhwa.chapters.find((c: Chapter) => c.id === chapterId);
       const foundChapterIndex = foundManhwa.chapters.findIndex((c: Chapter) => c.id === chapterId);
       setChapter(foundChapter);
       setChapterIndex(foundChapterIndex);
     }
-  }, [params.id, params.chapter]);
+  }, [id, chapterIdParam]);
 
   if (!manhwa || !chapter) {
     // Let suspense handle loading, and if it's not found after effect, it will 404.

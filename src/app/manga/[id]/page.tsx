@@ -4,7 +4,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { useEffect, useState, use, Suspense } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { manhwaList as defaultManhwaList } from '@/lib/data';
 import type { Manhwa } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
