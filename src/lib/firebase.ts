@@ -1,6 +1,7 @@
 
 import { initializeApp, getApps, getApp, type FirebaseApp } from 'firebase/app';
 import { getAuth, type Auth } from 'firebase/auth';
+import { getStorage, type FirebaseStorage } from 'firebase/storage';
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -13,6 +14,7 @@ const firebaseConfig = {
 
 let app: FirebaseApp | null = null;
 let auth: Auth | null = null;
+let storage: FirebaseStorage | null = null;
 
 const firebaseEnabled =
   !!process.env.NEXT_PUBLIC_FIREBASE_API_KEY &&
@@ -25,6 +27,7 @@ const firebaseEnabled =
 if (firebaseEnabled) {
   app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
   auth = getAuth(app);
+  storage = getStorage(app);
 }
 
-export { app, auth, firebaseEnabled };
+export { app, auth, storage, firebaseEnabled };
