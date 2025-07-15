@@ -113,24 +113,23 @@ export default function AdminPage() {
     },
   });
   
-  const loadData = () => {
-    const storedManhwa = localStorage.getItem('manhwaList');
-    const allManhwa = storedManhwa ? JSON.parse(storedManhwa) : defaultManhwaList;
-    setManhwaList(allManhwa);
-
-    const storedTrendingIds = localStorage.getItem('trendingManhwaIds');
-    let initialTrendingIds: string[];
-    if (storedTrendingIds) {
-      initialTrendingIds = JSON.parse(storedTrendingIds);
-    } else {
-      initialTrendingIds = allManhwa.filter(m => m.isTrending).map(m => m.id);
-    }
-    setTrendingManhwaIds(initialTrendingIds);
-    trendingForm.reset({ items: initialTrendingIds });
-    setIsLoading(false);
-  }
-
   useEffect(() => {
+    const loadData = () => {
+      const storedManhwa = localStorage.getItem('manhwaList');
+      const allManhwa = storedManhwa ? JSON.parse(storedManhwa) : defaultManhwaList;
+      setManhwaList(allManhwa);
+
+      const storedTrendingIds = localStorage.getItem('trendingManhwaIds');
+      let initialTrendingIds: string[];
+      if (storedTrendingIds) {
+        initialTrendingIds = JSON.parse(storedTrendingIds);
+      } else {
+        initialTrendingIds = allManhwa.filter(m => m.isTrending).map(m => m.id);
+      }
+      setTrendingManhwaIds(initialTrendingIds);
+      trendingForm.reset({ items: initialTrendingIds });
+      setIsLoading(false);
+    }
     loadData();
   }, [trendingForm]);
 
@@ -514,5 +513,3 @@ export default function AdminPage() {
     </div>
   );
 }
-
-    
