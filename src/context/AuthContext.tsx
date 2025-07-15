@@ -12,7 +12,7 @@ import {
   signInWithEmailAndPassword,
   updateProfile,
 } from 'firebase/auth';
-import { auth, firebaseEnabled } from '@/lib/firebase';
+import { auth, firebaseEnabled, adminEmail } from '@/lib/firebase';
 import Loading from '@/app/loading';
 
 interface AuthContextType {
@@ -31,8 +31,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const adminEmail = process.env.NEXT_PUBLIC_ADMIN_EMAIL;
-
+  
   const googleSignIn = async () => {
     if (!auth) throw new Error("Firebase not configured");
     const provider = new GoogleAuthProvider();

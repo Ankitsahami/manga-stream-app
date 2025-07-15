@@ -27,4 +27,6 @@ if (firebaseEnabled) {
   auth = getAuth(app);
 }
 
+export const adminEmail = process.env.NEXT_PUBLIC_ADMIN_EMAIL;
+
 export { app, auth, firebaseEnabled };
