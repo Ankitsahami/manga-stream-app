@@ -34,10 +34,10 @@ const baseNavLinks = [
 export function Header() {
   const pathname = usePathname();
   const router = useRouter();
-  const { user, logOut, authAvailable } = useAuth();
+  const { user, logOut, authAvailable, adminEmail } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  const isAdmin = user?.email === process.env.NEXT_PUBLIC_ADMIN_EMAIL;
+  const isAdmin = user?.email === adminEmail;
 
   const navLinks = useMemo(() => {
     const links = [...baseNavLinks];

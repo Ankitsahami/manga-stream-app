@@ -23,6 +23,7 @@ interface AuthContextType {
   emailSignUp: (email: string, pass: string, name: string) => Promise<void>;
   logOut: () => Promise<void>;
   authAvailable: boolean;
+  adminEmail: string | undefined;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -30,6 +31,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const adminEmail = process.env.NEXT_PUBLIC_ADMIN_EMAIL;
 
   const googleSignIn = async () => {
     if (!auth) throw new Error("Firebase not configured");
@@ -94,7 +96,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, googleSignIn, emailSignIn, emailSignUp, logOut, authAvailable: firebaseEnabled }}>
+    <AuthContext.Provider value={{ user, loading, googleSignIn, emailSignIn, emailSignUp, logOut, authAvailable: firebaseEnabled, adminEmail }}>
       {children}
     </AuthContext.Provider>
   );
