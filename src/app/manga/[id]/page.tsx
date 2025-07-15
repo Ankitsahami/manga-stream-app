@@ -15,10 +15,9 @@ import { Bookmark } from 'lucide-react';
 import { useBookmarks } from '@/hooks/useBookmarks';
 import Loading from '../../loading';
 
-function ManhwaDetails({ params }: { params: { id: string } }) {
+function ManhwaDetails({ id }: { id: string }) {
   const [manhwa, setManhwa] = useState<Manhwa | undefined>(undefined);
   const { isBookmarked, toggleBookmark } = useBookmarks();
-  const { id } = params;
 
   useEffect(() => {
     const storedManhwa = localStorage.getItem('manhwaList');
@@ -94,9 +93,10 @@ function ManhwaDetails({ params }: { params: { id: string } }) {
 }
 
 export default function ManhwaPage({ params }: { params: { id: string } }) {
+  const { id } = params;
   return (
     <Suspense fallback={<Loading />}>
-      <ManhwaDetails params={params} />
+      <ManhwaDetails id={id} />
     </Suspense>
   );
 }
