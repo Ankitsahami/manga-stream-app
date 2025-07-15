@@ -17,6 +17,8 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const adminEmail = process.env.NEXT_PUBLIC_ADMIN_EMAIL;
+
   return (
     <html lang="en" suppressHydrationWarning className="dark">
       <head>
@@ -29,7 +31,7 @@ export default function RootLayout({
       </head>
       <body className={cn('font-body antialiased min-h-screen flex flex-col')}>
         <AuthProvider>
-          <Header />
+          <Header adminEmail={adminEmail} />
           <main className="flex-grow container mx-auto px-4 py-8">{children}</main>
           <Footer />
           <Toaster />

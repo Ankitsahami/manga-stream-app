@@ -31,13 +31,15 @@ const baseNavLinks = [
   { href: '/bookmarks', label: 'Bookmarks', icon: BookMarked },
 ];
 
-export function Header() {
+export function Header({ adminEmail }: { adminEmail?: string }) {
   const pathname = usePathname();
   const router = useRouter();
-  const { user, logOut, authAvailable, adminEmail } = useAuth();
+  const { user, logOut, authAvailable } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  const isAdmin = user?.email === adminEmail;
+  const isAdmin = useMemo(() => {
+    return !!adminEmail && !!user && user.email === adminEmail;
+  }, [user, adminEmail]);
 
   const navLinks = useMemo(() => {
     const links = [...baseNavLinks];

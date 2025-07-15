@@ -12,7 +12,7 @@ import {
   signInWithEmailAndPassword,
   updateProfile,
 } from 'firebase/auth';
-import { auth, firebaseEnabled, adminEmail } from '@/lib/firebase';
+import { auth, firebaseEnabled } from '@/lib/firebase';
 import Loading from '@/app/loading';
 
 interface AuthContextType {
@@ -23,7 +23,6 @@ interface AuthContextType {
   emailSignUp: (email: string, pass: string, name: string) => Promise<void>;
   logOut: () => Promise<void>;
   authAvailable: boolean;
-  adminEmail: string | undefined;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -95,7 +94,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, googleSignIn, emailSignIn, emailSignUp, logOut, authAvailable: firebaseEnabled, adminEmail }}>
+    <AuthContext.Provider value={{ user, loading, googleSignIn, emailSignIn, emailSignUp, logOut, authAvailable: firebaseEnabled }}>
       {children}
     </AuthContext.Provider>
   );
