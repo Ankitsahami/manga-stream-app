@@ -6,6 +6,24 @@ function getPastDate(days: number): string {
   return date.toISOString();
 }
 
+const soloLevelingChapter1Pages = [
+  "https://asuracomic.net/wp-content/uploads/2024/04/01-copy-1.jpg",
+  "https://asuracomic.net/wp-content/uploads/2024/04/02-copy.jpg",
+  "https://asuracomic.net/wp-content/uploads/2024/04/03-copy.jpg",
+  "https://asuracomic.net/wp-content/uploads/2024/04/04-copy.jpg",
+  "https://asuracomic.net/wp-content/uploads/2024/04/05-copy.jpg",
+  "https://asuracomic.net/wp-content/uploads/2024/04/06-copy.jpg",
+  "https://asuracomic.net/wp-content/uploads/2024/04/07-copy.jpg",
+  "https://asuracomic.net/wp-content/uploads/2024/04/08-copy.jpg",
+  "https://asuracomic.net/wp-content/uploads/2024/04/09-copy.jpg",
+  "https://asuracomic.net/wp-content/uploads/2024/04/10-copy.jpg",
+  "https://asuracomic.net/wp-content/uploads/2024/04/11-copy.jpg",
+  "https://asuracomic.net/wp-content/uploads/2024/04/12-copy.jpg",
+  "https://asuracomic.net/wp-content/uploads/2024/04/13-copy.jpg",
+  "https://asuracomic.net/wp-content/uploads/2024/04/14-copy.jpg",
+  "https://asuracomic.net/wp-content/uploads/2024/04/15-copy.jpg"
+];
+
 export const manhwaList: Manhwa[] = [
   {
     id: 'solo-leveling',
@@ -16,7 +34,7 @@ export const manhwaList: Manhwa[] = [
     genres: ['Action', 'Fantasy', 'Adventure'],
     isTrending: true,
     chapters: [
-      { id: 1, title: 'Chapter 1', publishedAt: getPastDate(5), pages: Array.from({ length: 15 }, (_, i) => ({ id: i + 1, imageUrl: `https://placehold.co/800x1200.png` })) },
+      { id: 1, title: 'Chapter 1', publishedAt: getPastDate(5), pages: soloLevelingChapter1Pages.map((url, i) => ({ id: i + 1, imageUrl: url })) },
       { id: 2, title: 'Chapter 2', publishedAt: getPastDate(3), pages: Array.from({ length: 18 }, (_, i) => ({ id: i + 1, imageUrl: `https://placehold.co/800x1200.png` })) },
       { id: 3, title: 'Chapter 3', publishedAt: getPastDate(1), pages: Array.from({ length: 16 }, (_, i) => ({ id: i + 1, imageUrl: `https://placehold.co/800x1200.png` })) },
     ],
