@@ -26,10 +26,12 @@ function ManhwaDetails({ id }: { id: string }) {
     setManhwa(foundManhwa);
   }, [id]);
 
+  if (manhwa === undefined) {
+    return <Loading />;
+  }
+
   if (!manhwa) {
-    // This will be caught by loading.tsx initially, then notFound if it's still null after effect.
-    // To prevent flashing notFound, we can show a skeleton loader here.
-    return <Loading />; 
+    notFound();
   }
 
   return (
@@ -93,10 +95,9 @@ function ManhwaDetails({ id }: { id: string }) {
 }
 
 export default function ManhwaPage({ params }: { params: { id: string } }) {
-  const { id } = params;
   return (
     <Suspense fallback={<Loading />}>
-      <ManhwaDetails id={id} />
+      <ManhwaDetails id={params.id} />
     </Suspense>
   );
 }

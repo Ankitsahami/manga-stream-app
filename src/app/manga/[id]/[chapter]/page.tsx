@@ -34,9 +34,12 @@ function ChapterReader({ id, chapterIdParam }: { id: string; chapterIdParam: str
     }
   }, [id, chapterIdParam]);
 
-  if (!manhwa || !chapter) {
-    if(manhwa === null || chapter === null) notFound();
-    return null; 
+  if (manhwa === undefined || chapter === undefined) {
+    return <Loading />; 
+  }
+  
+  if (manhwa === null || chapter === null) {
+    notFound();
   }
 
   const prevChapter = chapterIndex > 0 ? manhwa.chapters[chapterIndex - 1] : null;
@@ -123,10 +126,9 @@ function ChapterReader({ id, chapterIdParam }: { id: string; chapterIdParam: str
 }
 
 export default function ChapterPage({ params }: { params: { id: string; chapter: string } }) {
-  const { id, chapter } = params;
   return (
     <Suspense fallback={<Loading />}>
-      <ChapterReader id={id} chapterIdParam={chapter} />
+      <ChapterReader id={params.id} chapterIdParam={params.chapter} />
     </Suspense>
   )
 }
