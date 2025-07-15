@@ -20,7 +20,7 @@ export default function RootLayout({
   const adminEmail = process.env.NEXT_PUBLIC_ADMIN_EMAIL;
 
   return (
-    <html lang="en" suppressHydrationWarning className="dark">
+    <html lang="en" suppressHydrationWarning>
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />

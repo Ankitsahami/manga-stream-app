@@ -7,31 +7,29 @@ import { Button } from '@/components/ui/button';
 
 export function ThemeToggle() {
   const [theme, setTheme] = React.useState('light');
-
-  React.useEffect(() => {
-    const isDark = document.documentElement.classList.contains('dark');
-    setTheme(isDark ? 'dark' : 'light');
-  }, []);
   
   React.useEffect(() => {
     const root = window.document.documentElement;
-    const storedTheme = localStorage.getItem('theme');
+    const initialTheme = localStorage.getItem('theme');
     
-    if (storedTheme) {
-        root.classList.remove('light', 'dark');
-        root.classList.add(storedTheme);
-        setTheme(storedTheme);
+    if (initialTheme) {
+      setTheme(initialTheme);
+      root.classList.add(initialTheme);
     } else {
-        setTheme('light')
+      const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      setTheme(systemTheme);
+      root.classList.add(systemTheme);
     }
-  }, [])
+  }, []);
 
 
   const toggleTheme = () => {
     const root = window.document.documentElement;
     const newTheme = theme === 'light' ? 'dark' : 'light';
+    
     root.classList.remove(theme);
     root.classList.add(newTheme);
+    
     localStorage.setItem('theme', newTheme);
     setTheme(newTheme);
   };
