@@ -94,10 +94,10 @@ function ManhwaDetails({ id }: { id: string }) {
   );
 }
 
-export default function ManhwaPage({ params }: { params: { id: string } }) {
+export default function ManhwaPage({ params: { id } }: { params: { id: string } }) {
   return (
     <Suspense fallback={<Loading />}>
-      <ManhwaDetails id={params.id} />
+      <ManhwaDetails id={id} />
     </Suspense>
   );
 }

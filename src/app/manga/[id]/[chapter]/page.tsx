@@ -125,10 +125,10 @@ function ChapterReader({ id, chapterIdParam }: { id: string; chapterIdParam: str
   );
 }
 
-export default function ChapterPage({ params }: { params: { id: string; chapter: string } }) {
+export default function ChapterPage({ params: { id, chapter } }: { params: { id: string; chapter: string } }) {
   return (
     <Suspense fallback={<Loading />}>
-      <ChapterReader id={params.id} chapterIdParam={params.chapter} />
+      <ChapterReader id={id} chapterIdParam={chapter} />
     </Suspense>
   )
 }
