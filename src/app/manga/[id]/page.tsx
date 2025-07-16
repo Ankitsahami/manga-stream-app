@@ -1,18 +1,19 @@
 
 'use client';
 
+import { Suspense, useEffect, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { notFound } from 'next/navigation';
-import { useEffect, useState, Suspense } from 'react';
+import { useParams } from 'next/navigation';
+import { formatDistanceToNow } from 'date-fns';
+import { BookMarked, Bookmark, Check, ChevronRight } from 'lucide-react';
+import type { Manhwa, Chapter } from '@/lib/types';
 import { manhwaList as defaultManhwaList } from '@/lib/data';
-import type { Manhwa } from '@/lib/types';
+import { useBookmarks } from '@/hooks/useBookmarks';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Bookmark } from 'lucide-react';
-import { useBookmarks } from '@/hooks/useBookmarks';
 import Loading from '../../loading';
 
 function ManhwaDetails({ id }: { id: string }) {
@@ -26,78 +27,81 @@ function ManhwaDetails({ id }: { id: string }) {
     setManhwa(foundManhwa);
   }, [id]);
 
-  if (manhwa === undefined) {
+  if (!manhwa) {
     return <Loading />;
   }
 
-  if (!manhwa) {
-    notFound();
-  }
+  const sortedChapters = [...manhwa.chapters].sort((a, b) => b.id - a.id);
 
   return (
-    <div className="grid md:grid-cols-4 gap-8">
-      <div className="md:col-span-1">
-        <Card className="overflow-hidden sticky top-24">
+    <div>
+      <Card className="overflow-hidden">
+        <div className="relative h-64 md:h-80 w-full">
           <Image
             src={manhwa.coverUrl}
-            alt={`Cover of ${manhwa.title}`}
-            width={300}
-            height={450}
-            className="w-full object-cover"
+            alt={`Cover for ${manhwa.title}`}
+            fill
+            className="object-cover object-top"
             data-ai-hint="manhwa cover"
+            priority
           />
-        </Card>
-        <Button onClick={() => toggleBookmark(manhwa.id)} className="w-full mt-4" variant={isBookmarked(manhwa.id) ? 'default' : 'outline'}>
-          <Bookmark className="mr-2 h-4 w-4" />
-          {isBookmarked(manhwa.id) ? 'Bookmarked' : 'Bookmark'}
-        </Button>
-      </div>
-
-      <div className="md:col-span-3">
-        <h1 className="text-4xl font-headline font-bold">{manhwa.title}</h1>
-        <p className="text-lg text-muted-foreground mt-1">by {manhwa.author}</p>
-        
-        <div className="flex flex-wrap gap-2 my-4">
-          {manhwa.genres.map(genre => (
-            <Badge key={genre} variant="secondary">{genre}</Badge>
-          ))}
+          <div className="absolute inset-0 bg-gradient-to-t from-background via-background/70 to-transparent" />
         </div>
-        
-        <p className="text-foreground/80 leading-relaxed">{manhwa.description}</p>
-        
-        <Separator className="my-8" />
-        
-        <Card>
-          <CardHeader>
-            <CardTitle className="font-headline">Chapters</CardTitle>
-          </CardHeader>
-          <CardContent>
+        <CardHeader className="relative -mt-24 z-10">
+          <CardTitle className="text-4xl font-headline">{manhwa.title}</CardTitle>
+          <CardDescription className="text-lg">by {manhwa.author}</CardDescription>
+        </CardHeader>
+        <CardContent className="z-10 relative">
+          <div className="flex flex-wrap gap-2 mb-6">
+            {manhwa.genres.map(genre => (
+              <Link key={genre} href={`/genres/${genre.toLowerCase()}`}>
+                <Badge variant="secondary">{genre}</Badge>
+              </Link>
+            ))}
+          </div>
+          <p className="text-muted-foreground mb-6">{manhwa.description}</p>
+          <Button onClick={() => toggleBookmark(manhwa.id)} variant="outline">
+            {isBookmarked(manhwa.id) ? (
+              <>
+                <Check className="mr-2 h-4 w-4" /> Bookmarked
+              </>
+            ) : (
+              <>
+                <Bookmark className="mr-2 h-4 w-4" /> Add to Bookmarks
+              </>
+            )}
+          </Button>
+          <Separator className="my-8" />
+          <div>
+            <h3 className="text-2xl font-headline font-bold mb-4">Chapters</h3>
             <div className="space-y-2">
-              {manhwa.chapters.length > 0 ? (
-                [...manhwa.chapters].reverse().map(chapter => (
-                  <Link
-                    key={chapter.id}
-                    href={`/manga/${manhwa.id}/${chapter.id}`}
-                    className="block p-4 rounded-md transition-colors hover:bg-muted"
-                  >
-                    <p className="font-medium">{chapter.title}</p>
-                  </Link>
-                ))
-              ) : (
-                <p className="text-muted-foreground p-4">No chapters available yet.</p>
-              )}
+              {sortedChapters.map(chapter => (
+                <Link
+                  key={chapter.id}
+                  href={`/manga/${manhwa.id}/${chapter.id}`}
+                  className="flex items-center justify-between p-3 rounded-lg bg-muted/50 hover:bg-accent hover:text-accent-foreground transition-colors group"
+                >
+                  <div>
+                    <p className="font-semibold">{chapter.title}</p>
+                    <p className="text-sm text-muted-foreground group-hover:text-accent-foreground">
+                      {formatDistanceToNow(new Date(chapter.publishedAt), { addSuffix: true })}
+                    </p>
+                  </div>
+                  <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:text-accent-foreground" />
+                </Link>
+              ))}
             </div>
-          </CardContent>
-        </Card>
-      </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
 
-export default function ManhwaPage({ params: { id } }: { params: { id: string } }) {
+export default function ManhwaPage({ params }: { params: { id: string } }) {
   return (
     <Suspense fallback={<Loading />}>
-      <ManhwaDetails id={id} />
+      <ManhwaDetails id={params.id} />
     </Suspense>
-  );
+  )
 }

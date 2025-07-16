@@ -1,24 +1,31 @@
 
 'use client';
 
+import { Suspense, useEffect, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { notFound } from 'next/navigation';
-import { useEffect, useState, Suspense } from 'react';
+import { useRouter } from 'next/navigation';
+import { Home, Bookmark, Check, ChevronLeft, ChevronRight } from 'lucide-react';
+import type { Manhwa, Chapter, Page } from '@/lib/types';
 import { manhwaList as defaultManhwaList } from '@/lib/data';
-import type { Manhwa, Chapter } from '@/lib/types';
-import { Button } from '@/components/ui/button';
-import { ArrowLeft, ArrowRight, Home, Bookmark } from 'lucide-react';
 import { useBookmarks } from '@/hooks/useBookmarks';
-import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
 import Loading from '../../../loading';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
-function ChapterReader({ id, chapterIdParam }: { id: string; chapterIdParam: string }) {
+function ChapterReader({ id, chapterIdParam }: { id: string, chapterIdParam: string }) {
+  const router = useRouter();
   const [manhwa, setManhwa] = useState<Manhwa | undefined>(undefined);
   const [chapter, setChapter] = useState<Chapter | undefined>(undefined);
   const [chapterIndex, setChapterIndex] = useState(-1);
   const { isBookmarked, toggleBookmark } = useBookmarks();
-  
+
   useEffect(() => {
     const storedManhwa = localStorage.getItem('manhwaList');
     const allManhwa = storedManhwa ? JSON.parse(storedManhwa) : defaultManhwaList;
@@ -27,108 +34,111 @@ function ChapterReader({ id, chapterIdParam }: { id: string; chapterIdParam: str
     if (foundManhwa) {
       setManhwa(foundManhwa);
       const chapterId = parseInt(chapterIdParam, 10);
-      const foundChapter = foundManhwa.chapters.find((c: Chapter) => c.id === chapterId);
-      const foundChapterIndex = foundManhwa.chapters.findIndex((c: Chapter) => c.id === chapterId);
+      const sortedChapters = [...foundManhwa.chapters].sort((a,b) => a.id - b.id);
+      const foundChapter = sortedChapters.find(c => c.id === chapterId);
       setChapter(foundChapter);
-      setChapterIndex(foundChapterIndex);
+      if(foundChapter) {
+        const CIndex = sortedChapters.findIndex(c => c.id === chapterId);
+        setChapterIndex(CIndex)
+      }
     }
   }, [id, chapterIdParam]);
 
-  if (manhwa === undefined || chapter === undefined) {
-    return <Loading />; 
-  }
-  
-  if (manhwa === null || chapter === null) {
-    notFound();
+  if (!manhwa || !chapter) {
+    return <Loading />;
   }
 
-  const prevChapter = chapterIndex > 0 ? manhwa.chapters[chapterIndex - 1] : null;
-  const nextChapter = chapterIndex < manhwa.chapters.length - 1 ? manhwa.chapters[chapterIndex + 1] : null;
+  const sortedChapters = [...manhwa.chapters].sort((a,b) => a.id - b.id);
+  const prevChapter = chapterIndex > 0 ? sortedChapters[chapterIndex - 1] : null;
+  const nextChapter = chapterIndex < sortedChapters.length - 1 ? sortedChapters[chapterIndex + 1] : null;
+
+  const handleChapterChange = (chapterId: string) => {
+    router.push(`/manga/${manhwa.id}/${chapterId}`);
+  };
 
   return (
-    <div className="w-full">
-      <div className="sticky top-16 bg-background/80 backdrop-blur-sm z-10 py-3 border-b mb-4">
-        <div className="container mx-auto flex justify-between items-center">
-          <Link href={`/manga/${manhwa.id}`} className="hover:text-accent transition-colors">
-            <h1 className="text-xl font-headline font-bold truncate">{manhwa.title}</h1>
-            <p className="text-sm text-muted-foreground">{chapter.title}</p>
-          </Link>
+    <div className="flex flex-col items-center">
+      <div className="w-full max-w-4xl bg-card border rounded-lg p-4 sticky top-20 z-40 mb-4">
+         <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+            <Link href={`/manga/${manhwa.id}`} className="flex items-center gap-2 text-lg font-headline font-bold hover:text-accent">
+              <Home className="h-5 w-5" />
+              <span>{manhwa.title}</span>
+            </Link>
 
-          <div className="flex items-center gap-2">
-            {prevChapter ? (
-              <Button asChild variant="outline" size="sm">
-                <Link href={`/manga/${manhwa.id}/${prevChapter.id}`}>
-                  <ArrowLeft className="h-4 w-4 md:mr-2" />
-                  <span className="hidden md:inline">Previous</span>
+           <div className="flex items-center gap-2">
+              <Button variant="outline" size="icon" asChild disabled={!prevChapter}>
+                <Link href={prevChapter ? `/manga/${manhwa.id}/${prevChapter.id}` : '#'}>
+                    <ChevronLeft/>
                 </Link>
               </Button>
-            ) : <div className="w-24 md:w-[105px]"></div>}
-             <Button asChild variant="outline" size="icon">
-                <Link href={`/`}>
-                  <Home className="h-4 w-4" />
+
+             <Select onValueChange={handleChapterChange} defaultValue={chapter.id.toString()}>
+                <SelectTrigger className="w-[200px]">
+                  <SelectValue placeholder="Select chapter" />
+                </SelectTrigger>
+                <SelectContent>
+                  {sortedChapters.map(c => (
+                    <SelectItem key={c.id} value={c.id.toString()}>
+                      {c.title}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            
+              <Button variant="outline" size="icon" asChild disabled={!nextChapter}>
+                <Link href={nextChapter ? `/manga/${manhwa.id}/${nextChapter.id}` : '#'}>
+                  <ChevronRight/>
                 </Link>
               </Button>
-             <Button 
-                variant={isBookmarked(manhwa.id) ? 'default' : 'outline'} 
-                size="icon" 
-                onClick={() => toggleBookmark(manhwa.id)}
-                aria-label={isBookmarked(manhwa.id) ? 'Remove bookmark' : 'Add bookmark'}
-             >
-                <Bookmark className={cn("h-4 w-4", isBookmarked(manhwa.id) && "fill-current")} />
-              </Button>
-            {nextChapter ? (
-              <Button asChild variant="outline" size="sm">
-                <Link href={`/manga/${manhwa.id}/${nextChapter.id}`}>
-                  <span className="hidden md:inline">Next</span>
-                  <ArrowRight className="h-4 w-4 md:ml-2" />
-                </Link>
-              </Button>
-            ) : <div className="w-24 md:w-[105px]"></div>}
-          </div>
+            </div>
+             <Button onClick={() => toggleBookmark(manhwa.id)} variant="outline" size="icon">
+                {isBookmarked(manhwa.id) ? (
+                  <Check className="text-green-500" />
+                ) : (
+                  <Bookmark/>
+                )}
+            </Button>
         </div>
+        <h1 className="text-center text-2xl font-semibold mt-4">{chapter.title}</h1>
       </div>
 
-      <div className="flex flex-col items-center">
-        {chapter.pages.map((page, index) => (
-          <div key={page.id} className="relative w-full max-w-3xl aspect-[2/3]">
+      <div className="w-full max-w-3xl">
+        {chapter.pages.map((page: Page) => (
+          <div key={page.id} className="relative w-full">
             <Image
               src={page.imageUrl}
-              alt={`Page ${page.id} of ${chapter.title}`}
-              fill
-              priority={index === 0}
-              className="object-contain"
+              alt={`Page ${page.id}`}
+              width={800}
+              height={1200}
+              className="w-full h-auto"
+              priority={page.id <= 2}
+              loading={page.id > 2 ? 'lazy' : 'eager'}
               data-ai-hint="manhwa page"
             />
           </div>
         ))}
       </div>
       
-      <div className="container mx-auto flex justify-center items-center gap-4 my-8">
-         {prevChapter && (
-            <Button asChild variant="outline" size="lg">
-              <Link href={`/manga/${manhwa.id}/${prevChapter.id}`}>
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Previous Chapter
-              </Link>
-            </Button>
-          )}
-          {nextChapter && (
-            <Button asChild size="lg">
-              <Link href={`/manga/${manhwa.id}/${nextChapter.id}`}>
-                Next Chapter
-                <ArrowRight className="h-4 w-4 ml-2" />
-              </Link>
-            </Button>
-          )}
+       <div className="flex items-center gap-4 mt-8">
+        <Button variant="outline" asChild disabled={!prevChapter}>
+            <Link href={prevChapter ? `/manga/${manhwa.id}/${prevChapter.id}` : '#'}>
+                <ChevronLeft className="mr-2 h-4 w-4" /> Previous Chapter
+            </Link>
+        </Button>
+        <Button variant="outline" asChild disabled={!nextChapter}>
+            <Link href={nextChapter ? `/manga/${manhwa.id}/${nextChapter.id}` : '#'}>
+                Next Chapter <ChevronRight className="ml-2 h-4 w-4" />
+            </Link>
+        </Button>
       </div>
     </div>
   );
 }
 
-export default function ChapterPage({ params: { id, chapter } }: { params: { id: string; chapter: string } }) {
+export default function ChapterPage({ params }: { params: { id: string; chapter: string } }) {
   return (
     <Suspense fallback={<Loading />}>
-      <ChapterReader id={id} chapterIdParam={chapter} />
+      <ChapterReader id={params.id} chapterIdParam={params.chapter} />
     </Suspense>
   )
 }
