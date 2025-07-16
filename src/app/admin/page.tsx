@@ -51,7 +51,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { manhwaList as defaultManhwaList } from '@/lib/data';
 import type { Manhwa, Chapter } from '@/lib/types';
-import { Edit, Trash2, PlusCircle, BookOpen } from 'lucide-react';
+import { Edit, Trash2, PlusCircle, BookOpen, Loader2 } from 'lucide-react';
+import { getDownloadURL, ref, uploadBytesResumable } from 'firebase/storage';
+import { storage, firebaseEnabled } from '@/lib/firebase';
+import { Progress } from '@/components/ui/progress';
 
 const manhwaSchema = z.object({
   id: z.string().optional(),
@@ -64,7 +67,7 @@ const manhwaSchema = z.object({
 
 const chapterSchema = z.object({
     title: z.string().min(1, 'Chapter title is required'),
-    pages: z.string().min(1, 'At least one page URL is required.'),
+    pages: z.custom<FileList>().refine(files => files?.length > 0, 'At least one image file is required.'),
 });
 
 type ManhwaFormValues = z.infer<typeof manhwaSchema>;
@@ -86,6 +89,8 @@ export default function AdminPage() {
   const [isEditModalOpen, setEditModalOpen] = useState(false);
   const [isChapterModalOpen, setChapterModalOpen] = useState(false);
   const [selectedManhwa, setSelectedManhwa] = useState<Manhwa | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
   
   const manhwaForm = useForm<ManhwaFormValues>({
     resolver: zodResolver(manhwaSchema),
@@ -102,7 +107,6 @@ export default function AdminPage() {
     resolver: zodResolver(chapterSchema),
     defaultValues: {
       title: '',
-      pages: '',
     },
   });
 
@@ -141,7 +145,6 @@ export default function AdminPage() {
   
   const onManhwaSubmit: SubmitHandler<ManhwaFormValues> = (data) => {
     if (data.id) {
-      // Editing existing manhwa
       const updatedList = manhwaList.map(m => 
         m.id === data.id 
           ? { ...m, ...data, genres: data.genres.split(',').map(g => g.trim()) }
@@ -150,7 +153,6 @@ export default function AdminPage() {
       saveManhwaList(updatedList);
       toast({ title: 'Success!', description: 'Manhwa updated.' });
     } else {
-      // Adding new manhwa
        const newManhwa: Manhwa = {
         id: data.title.toLowerCase().replace(/\s+/g, '-'),
         ...data,
@@ -189,25 +191,75 @@ export default function AdminPage() {
     setChapterModalOpen(true);
   };
 
-  const onChapterSubmit: SubmitHandler<ChapterFormValues> = (data) => {
-    if (!selectedManhwa) return;
+  const onChapterSubmit: SubmitHandler<ChapterFormValues> = async (data) => {
+    if (!selectedManhwa || !firebaseEnabled || !storage) {
+       toast({ variant: 'destructive', title: 'Error', description: 'Firebase not configured or no series selected.' });
+       return;
+    }
+    
+    setIsUploading(true);
+    setUploadProgress(0);
 
-    const newChapter: Chapter = {
-      id: (selectedManhwa.chapters.length > 0 ? Math.max(...selectedManhwa.chapters.map(c => c.id)) : 0) + 1,
-      title: data.title,
-      publishedAt: new Date().toISOString(),
-      pages: data.pages.split(',').map((url, i) => ({ id: i + 1, imageUrl: url.trim() })),
-    };
+    const files = Array.from(data.pages);
+    const totalFiles = files.length;
+    let uploadedCount = 0;
+    const pageUrls: string[] = [];
 
-    const updatedList = manhwaList.map(m =>
-      m.id === selectedManhwa.id
-        ? { ...m, chapters: [...m.chapters, newChapter] }
-        : m
-    );
-    saveManhwaList(updatedList);
-    setSelectedManhwa(prev => prev ? { ...prev, chapters: [...prev.chapters, newChapter] } : null);
-    toast({ title: 'Success!', description: 'New chapter added.' });
-    chapterForm.reset();
+    try {
+        for (const file of files) {
+            const chapterTitleForPath = data.title.toLowerCase().replace(/\s+/g, '-');
+            const storagePath = `manga/${selectedManhwa.id}/${chapterTitleForPath}/${file.name}`;
+            const storageRef = ref(storage, storagePath);
+            const uploadTask = uploadBytesResumable(storageRef, file);
+
+            await new Promise<void>((resolve, reject) => {
+                uploadTask.on(
+                    'state_changed',
+                    (snapshot) => {
+                        const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * (100 / totalFiles);
+                        setUploadProgress(prev => prev + progress - (prev % (100/totalFiles))); // Update progress based on individual file
+                    },
+                    (error) => {
+                        console.error("Upload failed for a file:", error);
+                        reject(error);
+                    },
+                    async () => {
+                        const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+                        pageUrls.push(downloadURL);
+                        uploadedCount++;
+                        setUploadProgress((uploadedCount / totalFiles) * 100);
+                        resolve();
+                    }
+                );
+            });
+        }
+        
+        pageUrls.sort();
+
+        const newChapter: Chapter = {
+            id: (selectedManhwa.chapters.length > 0 ? Math.max(...selectedManhwa.chapters.map(c => c.id)) : 0) + 1,
+            title: data.title,
+            publishedAt: new Date().toISOString(),
+            pages: pageUrls.map((url, i) => ({ id: i + 1, imageUrl: url })),
+        };
+
+        const updatedList = manhwaList.map(m =>
+            m.id === selectedManhwa.id
+                ? { ...m, chapters: [...m.chapters, newChapter] }
+                : m
+        );
+        
+        saveManhwaList(updatedList);
+        setSelectedManhwa(prev => prev ? { ...prev, chapters: [...prev.chapters, newChapter] } : null);
+        toast({ title: 'Success!', description: 'New chapter added.' });
+        chapterForm.reset();
+
+    } catch (error) {
+        toast({ variant: 'destructive', title: 'Upload Failed', description: 'One or more images failed to upload.' });
+    } finally {
+        setIsUploading(false);
+        setUploadProgress(0);
+    }
   };
 
   const deleteChapter = (chapterId: number) => {
@@ -464,43 +516,66 @@ export default function AdminPage() {
             </div>
             <div className="space-y-4">
               <h3 className="font-semibold text-lg">Add New Chapter</h3>
-              <Form {...chapterForm}>
-                <form onSubmit={chapterForm.handleSubmit(onChapterSubmit)} className="space-y-4">
-                   <FormField
-                    control={chapterForm.control}
-                    name="title"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Chapter Title</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Chapter 1: The Awakening" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
+              {!firebaseEnabled ? (
+                 <div className="flex flex-col items-center justify-center text-center p-8 border-2 border-dashed rounded-lg bg-muted">
+                    <h4 className="font-semibold">Firebase Not Configured</h4>
+                    <p className="text-sm text-muted-foreground mt-2">
+                        You must configure Firebase in your .env file to enable chapter uploads.
+                    </p>
+                 </div>
+              ) : (
+                <Form {...chapterForm}>
+                    <form onSubmit={chapterForm.handleSubmit(onChapterSubmit)} className="space-y-4">
+                    <FormField
+                        control={chapterForm.control}
+                        name="title"
+                        render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Chapter Title</FormLabel>
+                            <FormControl>
+                            <Input placeholder="Chapter 1: The Awakening" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                        </FormItem>
+                        )}
+                    />
+                    <FormField
+                      control={chapterForm.control}
+                      name="pages"
+                      render={({ field: { onChange, value, ...rest } }) => (
+                        <FormItem>
+                          <FormLabel>Page Images</FormLabel>
+                          <FormControl>
+                            <Input 
+                              type="file" 
+                              multiple 
+                              accept="image/jpeg,image/png,image/webp"
+                              onChange={(e) => onChange(e.target.files)}
+                              {...rest} 
+                            />
+                          </FormControl>
+                          <FormDescription>
+                            Select all pages for this chapter in order.
+                          </FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    {isUploading && (
+                        <div className="space-y-2">
+                            <Progress value={uploadProgress} />
+                            <p className="text-sm text-muted-foreground text-center">
+                                Uploading {Math.round(uploadProgress)}%
+                            </p>
+                        </div>
                     )}
-                  />
-                  <FormField
-                    control={chapterForm.control}
-                    name="pages"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Page Image URLs</FormLabel>
-                        <FormControl>
-                          <Textarea placeholder="https://.../page1.png, https://.../page2.png" {...field} />
-                        </FormControl>
-                        <FormDescription>
-                          Paste URLs separated by commas.
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <Button type="submit" className="w-full">
-                    <PlusCircle className="mr-2 h-4 w-4" />
-                    Add Chapter
-                  </Button>
-                </form>
-              </Form>
+                    <Button type="submit" className="w-full" disabled={isUploading}>
+                        {isUploading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <PlusCircle className="mr-2 h-4 w-4" />}
+                        {isUploading ? 'Uploading...' : 'Add Chapter'}
+                    </Button>
+                    </form>
+                </Form>
+              )}
             </div>
           </div>
           <DialogFooter>
